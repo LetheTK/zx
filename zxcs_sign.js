@@ -10,7 +10,7 @@ async function sign() {
         console.log('读取到的Cookie:', cookie)
         
         if (!cookie) {
-            $.msg(cookieName, '未获取Cookie', '请先获取Cookie')
+            $notification.post(cookieName, '未获取Cookie', '请先获取Cookie')
             return
         }
 
@@ -31,30 +31,29 @@ async function sign() {
         
         console.log('发送请求:', JSON.stringify(myRequest))
 
-        $.get(myRequest, (error, response, data) => {
+        $httpClient.get(myRequest, (error, response, data) => {
             console.log('响应数据:', data)
             console.log('错误信息:', error)
             
             if (error) {
-                $.msg(cookieName, '签到失败', error)
+                $notification.post(cookieName, '签到失败', error)
                 return
             }
             if (!data) {
-                $.msg(cookieName, '签到失败', '返回数据为空')
+                $notification.post(cookieName, '签到失败', '返回数据为空')
                 return
             }
             if (data.indexOf('今日已签到') !== -1) {
-                $.msg(cookieName, '签到失败', '今日已签到')
+                $notification.post(cookieName, '签到失败', '今日已签到')
             } else if (data.indexOf('签到成功') !== -1) {
-                $.msg(cookieName, '签到成功', '')
+                $notification.post(cookieName, '签到成功', '')
             } else {
-                $.msg(cookieName, '签到失败', '未知错误: ' + data)
+                $notification.post(cookieName, '签到失败', '未知错误: ' + data)
             }
         })
     } catch (e) {
         console.log('执行异常:', e)
-        $.msg(cookieName, '签到异常', e.message)
-        $.logErr(e)
+        $notification.post(cookieName, '签到异常', e.message)
     }
 }
 
@@ -63,23 +62,11 @@ function Env(t){
     this.logs=[];
     this.getdata=(k)=>{
         try {
-            return $.read(k)
+            return $persistentStore.read(k)
         } catch(e) {
             console.log('读取失败:', e)
             return null
         }
-    };
-    this.msg=(title,subtitle,body)=>{
-        $.notify(title,subtitle,body);
-    };
-    this.get=(opts,cb)=>{
-        $.http.get(opts,(err,resp,body)=>{
-            console.log('HTTP响应:', resp)
-            cb(err,resp,body)
-        });
-    };
-    this.logErr=(e)=>{
-        $.log('', `❗️${this.name}, 错误!`, e);
     };
 }
 
