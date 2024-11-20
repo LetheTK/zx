@@ -9,7 +9,12 @@ const csKey = 'soul_cs'
         const at = $persistentStore.read(atKey)
         const cs = $persistentStore.read(csKey)
         
-        console.log('获取到的信息：', {token, at, cs})
+        let logMsg = '================================\n'
+        logMsg += `token: ${token}\n`
+        logMsg += `at: ${at}\n`
+        logMsg += `cs: ${cs}\n`
+        logMsg += '================================\n'
+        console.log(logMsg)
         
         if (!token || !at || !cs) {
             $notification.post(cookieName, '签到失败', '请先获取签到信息')
@@ -31,43 +36,53 @@ const csKey = 'soul_cs'
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'aid': '10000001',
-            'av': '5.11.0'
+            'av': '5.11.0',
+            'sdi': '622bb76e20d0d34c95d0da6a0ad399ed',
+            'avc': '240122101600',
+            'Content-Type': 'application/json'
         }
         
-        console.log('请求URL:', url)
-        console.log('请求头:', JSON.stringify(headers))
-        
-        $httpClient.post({
+        // 打印请求信息
+        console.log('请求信息：', {
             url: url,
             headers: headers
+        })
+
+        $httpClient.post({
+            url: url,
+            headers: headers,
+            body: JSON.stringify({})  // 添加空的请求体
         }, (error, response, data) => {
+            console.log('响应信息：', {
+                error: error,
+                statusCode: response?.statusCode,
+                headers: response?.headers,
+                data: data
+            })
+
             if (error) {
-                console.log('请求错误:', error)
                 $notification.post(cookieName, '签到失败', `请求错误: ${error}`)
             } else {
-                console.log('响应状态码:', response.status)
-                console.log('响应数据:', data)
                 try {
                     const result = JSON.parse(data)
-                    console.log('解析后的结果:', JSON.stringify(result))
+                    console.log('解析结果：', result)
                     
                     if (result.status === 1) {
-                        $notification.post(cookieName, '签到成功', `响应: ${JSON.stringify(result)}`)
+                        $notification.post(cookieName, '签到成功', JSON.stringify(result))
                     } else {
-                        $notification.post(cookieName, '签到失败', `错误信息: ${JSON.stringify(result)}`)
+                        $notification.post(cookieName, '签到失败', JSON.stringify(result))
                     }
                 } catch (e) {
-                    console.log('解析响应失败:', e)
-                    console.log('原始响应:', data)
-                    $notification.post(cookieName, '签到失败', `解析响应失败: ${e.message}, 原始响应: ${data}`)
+                    console.log('解析失败：', e)
+                    $notification.post(cookieName, '签到失败', `解析失败: ${data}`)
                 }
             }
             $done({})
         })
         
     } catch (e) {
-        console.log('执行异常:', e)
-        $notification.post(cookieName, '签到异常', `详细错误: ${e.message}`)
+        console.log('脚本异常：', e)
+        $notification.post(cookieName, '签到异常', e.message)
         $done({})
     }
 })()
