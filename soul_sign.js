@@ -17,7 +17,7 @@ const csKey = 'soul_cs'
 
         // 生成bi参数
         const biParams = [
-            Date.now().toString(16),  // 时间戳
+            (Date.now() + Math.floor(Math.random() * 1000)).toString(16),  // 时间戳
             "--",
             "Apple",
             "iOS",
@@ -27,7 +27,7 @@ const csKey = 'soul_cs'
             "3",
             "390*844",
             "AppStore",
-            "WiFi",
+            "Unknown",  // 网络状态可能是 Unknown
             "zh"
         ]
         
@@ -62,24 +62,34 @@ function checkSignStatus(token, at, cs, biParams) {
             'at': at,
             'cs': cs,
             'User-Agent': 'Soul iOS 5.11.0',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Accept-Language': 'zh-Hans-CN;q=1',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive'
         }
+        
+        console.log('请求签到状态URL:', url)
+        console.log('请求头:', headers)
         
         $httpClient.get({url, headers}, (error, response, data) => {
             if (error) {
+                console.log('请求失败:', error)
                 reject(error)
                 return
             }
             try {
+                console.log('原始响应:', data)
                 const result = JSON.parse(data)
-                console.log('签到状态返回：', result)
+                console.log('解析后的响应:', result)
                 
                 if (result.status === 1) {
-                    resolve(result.data)
+                    resolve(result.data || {})
                 } else {
+                    console.log('获取签到状态失败:', result)
                     reject(new Error(result.msg || '获取签到状态失败'))
                 }
             } catch (e) {
+                console.log('解析响应失败:', e)
                 reject(e)
             }
         })
@@ -98,8 +108,14 @@ function doSign(token, at, cs, biParams) {
             'cs': cs,
             'User-Agent': 'Soul iOS 5.11.0',
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Accept-Language': 'zh-Hans-CN;q=1',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive'
         }
+        
+        console.log('请求签到URL:', url)
+        console.log('请求头:', headers)
         
         $httpClient.post({
             url: url,
@@ -107,14 +123,16 @@ function doSign(token, at, cs, biParams) {
             body: JSON.stringify({})
         }, (error, response, data) => {
             if (error) {
+                console.log('签到请求失败:', error)
                 $notification.post(cookieName, '签到失败', `请求错误: ${error}`)
                 reject(error)
                 return
             }
             
             try {
+                console.log('原始响应:', data)
                 const result = JSON.parse(data)
-                console.log('签到结果：', result)
+                console.log('解析后的响应:', result)
                 
                 if (result.status === 1) {
                     let msg = '获得奖励：'
@@ -124,11 +142,12 @@ function doSign(token, at, cs, biParams) {
                     $notification.post(cookieName, '签到成功', msg)
                     resolve(result)
                 } else {
+                    console.log('签到失败:', result)
                     $notification.post(cookieName, '签到失败', result.msg || '未知错误')
                     reject(new Error(result.msg))
                 }
             } catch (e) {
-                console.log('解析签到结果失败：', e)
+                console.log('解析签到结果失败:', e)
                 $notification.post(cookieName, '签到失败', `解析失败: ${data}`)
                 reject(e)
             }
