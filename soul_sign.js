@@ -27,7 +27,7 @@ const csKey = 'soul_cs'
             "3",
             "390*844",
             "AppStore",
-            "Unknown",  // 网络状态可能是 Unknown
+            "Unknown",
             "zh"
         ]
         
@@ -35,7 +35,7 @@ const csKey = 'soul_cs'
         const statusResult = await checkSignStatus(token, at, cs, biParams)
         console.log('签到状态：', statusResult)
         
-        if (statusResult.todaySign) {
+        if (statusResult.todaySignStatus) {
             $notification.post(cookieName, '今日已签到', '')
             $done({})
             return
@@ -58,14 +58,21 @@ function checkSignStatus(token, at, cs, biParams) {
         const url = `https://increase-openapi.soulapp.cn/increase/sign/getTodaySignStatus?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
         
         const headers = {
-            'tk': token,
-            'at': at,
+            'Host': 'increase-openapi.soulapp.cn',
             'cs': cs,
-            'User-Agent': 'Soul iOS 5.11.0',
-            'Accept': 'application/json',
-            'Accept-Language': 'zh-Hans-CN;q=1',
+            'tk': token,
+            'Accept': '*/*',
+            'clientTraceId': `b${Date.now()}QWlhOUhTT1BsY1Z1WUNwTVhMR0V3QT09`,
+            'os': 'iOS',
+            'slb': 'dE1vSGF4bzBvYWVyQkZZSzEvanZ0N3NoZmxPWEY4U1p0TW9IYXhvMG9hZUNPOXFJaWM2TEJRPT0=',
+            'at': at,
+            'Accept-Language': 'zh-Hans-US;q=1, en-US;q=0.9, zh-Hant-US;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive'
+            'User-Agent': 'Soul_New/5.11.0 (iPhone; iOS 17.6.1; Scale/3.00; CFNetwork; iPhone14,2)',
+            'Connection': 'keep-alive',
+            'avc': '240122101600',
+            'aid': '10000001',
+            'av': '5.11.0'
         }
         
         console.log('请求签到状态URL:', url)
@@ -82,11 +89,11 @@ function checkSignStatus(token, at, cs, biParams) {
                 const result = JSON.parse(data)
                 console.log('解析后的响应:', result)
                 
-                if (result.status === 1) {
+                if (result.code === 10001) {
                     resolve(result.data || {})
                 } else {
                     console.log('获取签到状态失败:', result)
-                    reject(new Error(result.msg || '获取签到状态失败'))
+                    reject(new Error(result.message || '获取签到状态失败'))
                 }
             } catch (e) {
                 console.log('解析响应失败:', e)
@@ -103,15 +110,21 @@ function doSign(token, at, cs, biParams) {
         const url = `https://increase-openapi.soulapp.cn/increase/sign/sign?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
         
         const headers = {
-            'tk': token,
-            'at': at,
+            'Host': 'increase-openapi.soulapp.cn',
             'cs': cs,
-            'User-Agent': 'Soul iOS 5.11.0',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Accept-Language': 'zh-Hans-CN;q=1',
+            'tk': token,
+            'Accept': '*/*',
+            'clientTraceId': `b${Date.now()}QWlhOUhTT1BsY1Z1WUNwTVhMR0V3QT09`,
+            'os': 'iOS',
+            'slb': 'dE1vSGF4bzBvYWVyQkZZSzEvanZ0N3NoZmxPWEY4U1p0TW9IYXhvMG9hZUNPOXFJaWM2TEJRPT0=',
+            'at': at,
+            'Accept-Language': 'zh-Hans-US;q=1, en-US;q=0.9, zh-Hant-US;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive'
+            'User-Agent': 'Soul_New/5.11.0 (iPhone; iOS 17.6.1; Scale/3.00; CFNetwork; iPhone14,2)',
+            'Connection': 'keep-alive',
+            'avc': '240122101600',
+            'aid': '10000001',
+            'av': '5.11.0'
         }
         
         console.log('请求签到URL:', url)
@@ -134,17 +147,18 @@ function doSign(token, at, cs, biParams) {
                 const result = JSON.parse(data)
                 console.log('解析后的响应:', result)
                 
-                if (result.status === 1) {
-                    let msg = '获得奖励：'
+                if (result.code === 10001) {
+                    let msg = '签到成功'
                     if (result.data?.rewards) {
+                        msg += '，获得奖励：'
                         msg += result.data.rewards.map(r => `${r.name}x${r.num}`).join('、')
                     }
                     $notification.post(cookieName, '签到成功', msg)
                     resolve(result)
                 } else {
                     console.log('签到失败:', result)
-                    $notification.post(cookieName, '签到失败', result.msg || '未知错误')
-                    reject(new Error(result.msg))
+                    $notification.post(cookieName, '签到失败', result.message || '未知错误')
+                    reject(new Error(result.message))
                 }
             } catch (e) {
                 console.log('解析签到结果失败:', e)
