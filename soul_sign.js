@@ -50,7 +50,17 @@ function checkSignStatus(token, at, cs) {
             }
             try {
                 const result = JSON.parse(data)
-                resolve(result.data)
+                console.log('签到状态返回：', result)
+                
+                // 根据实际返回结构判断是否已签到
+                if (result.status === 1) {
+                    resolve({
+                        signed: result.data?.todaySign || false,
+                        data: result.data
+                    })
+                } else {
+                    reject(new Error(result.msg || '获取签到状态失败'))
+                }
             } catch (e) {
                 reject(e)
             }
@@ -82,14 +92,21 @@ function doSign(token, at, cs) {
             
             try {
                 const result = JSON.parse(data)
+                console.log('签到结果：', result)
+                
                 if (result.status === 1) {
-                    $notification.post(cookieName, '签到成功', JSON.stringify(result))
+                    let msg = '获得奖励：'
+                    if (result.data?.rewards) {
+                        msg += result.data.rewards.map(r => `${r.name}x${r.num}`).join('、')
+                    }
+                    $notification.post(cookieName, '签到成功', msg)
                     resolve(result)
                 } else {
-                    $notification.post(cookieName, '签到失败', JSON.stringify(result))
+                    $notification.post(cookieName, '签到失败', result.msg || '未知错误')
                     reject(new Error(result.msg))
                 }
             } catch (e) {
+                console.log('解析签到结果失败：', e)
                 $notification.post(cookieName, '签到失败', `解析失败: ${data}`)
                 reject(e)
             }
