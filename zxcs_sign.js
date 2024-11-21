@@ -38,12 +38,23 @@ function logAndNotify(title, subtitle, message) {
 
             try {
                 const userInfo = JSON.parse(userData);
-                console.log('用户信息:', JSON.stringify(userInfo, null, 2));
+                console.log('完整的用户信息:', JSON.stringify(userInfo, null, 2));
                 
                 if (!userInfo.id) {
                     logAndNotify(cookieName, '未登录 ❌', '请重新获取Cookie');
                     $done({});
                     return;
+                }
+
+                // 尝试查找可能的积分字段
+                const possiblePointsFields = ['points', 'credit', 'credits', 'point', 'score', 'scores'];
+                let userPoints = 0;
+                for (const field of possiblePointsFields) {
+                    if (userInfo[field] !== undefined) {
+                        console.log(`找到积分字段: ${field} = ${userInfo[field]}`);
+                        userPoints = userInfo[field];
+                        break;
+                    }
                 }
 
                 // 执行签到请求
