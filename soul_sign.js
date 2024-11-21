@@ -57,6 +57,10 @@ function checkSignStatus(token, at, cs, biParams) {
         const bi = encodeURIComponent(JSON.stringify(biParams))
         const url = `https://increase-openapi.soulapp.cn/increase/sign/getTodaySignStatus?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
         
+        // 生成设备相关的ID
+        const deviceId = '7273B6A5-A2D7-4B92-B4EA-E832998EE844'  // 这个需要保持固定
+        const sdi = '622bb76e20d0d34c95d0da6a0ad399ed'  // 这个也需要保持固定
+        
         const headers = {
             'Host': 'increase-openapi.soulapp.cn',
             'cs': cs,
@@ -72,7 +76,9 @@ function checkSignStatus(token, at, cs, biParams) {
             'Connection': 'keep-alive',
             'avc': '240122101600',
             'aid': '10000001',
-            'av': '5.11.0'
+            'av': '5.11.0',
+            'di': deviceId,
+            'sdi': sdi
         }
         
         console.log('请求签到状态URL:', url)
@@ -109,6 +115,10 @@ function doSign(token, at, cs, biParams) {
         const bi = encodeURIComponent(JSON.stringify(biParams))
         const url = `https://increase-openapi.soulapp.cn/increase/sign/sign?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
         
+        // 生成设备相关的ID
+        const deviceId = '7273B6A5-A2D7-4B92-B4EA-E832998EE844'
+        const sdi = '622bb76e20d0d34c95d0da6a0ad399ed'
+        
         const headers = {
             'Host': 'increase-openapi.soulapp.cn',
             'cs': cs,
@@ -124,7 +134,10 @@ function doSign(token, at, cs, biParams) {
             'Connection': 'keep-alive',
             'avc': '240122101600',
             'aid': '10000001',
-            'av': '5.11.0'
+            'av': '5.11.0',
+            'di': deviceId,
+            'sdi': sdi,
+            'Content-Type': 'application/json; charset=utf-8'
         }
         
         console.log('请求签到URL:', url)
