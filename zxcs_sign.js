@@ -42,7 +42,7 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
             console.log('获得响应')
             console.log('状态码:', response ? response.status : 'unknown')
             console.log('响应头:', response ? JSON.stringify(response.headers, null, 2) : 'unknown')
-            console.log('响应体:', data)
+            console.log('原始响应体:', data)
 
             if (error) {
                 $notification.post(cookieName, '签到失败 ❌', '请求异常：' + error)
@@ -51,22 +51,43 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                 try {
                     // 检查响应是否为空
                     if (!data || data === '{}') {
-                        // 空响应通常意味着已经签到
-                        const now = new Date()
-                        const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+                        // 尝试获取用户信息来确认积分
+                        const userInfoRequest = {
+                            url: 'https://zxcsol.com/wp-admin/admin-ajax.php?action=get_current_user',
+                            headers: headers
+                        };
                         
-                        $notification.post(
-                            `${cookieName} 🔔`,
-                            `今日已签到 ✓`,
-                            `时间：${timeStr}`
-                        )
+                        $httpClient.get(userInfoRequest, (error, response, userData) => {
+                            console.log('获取用户信息响应:', userData);
+                            
+                            const now = new Date()
+                            const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+                            
+                            let message = `时间：${timeStr}`;
+                            if (!error && userData) {
+                                try {
+                                    const userInfo = JSON.parse(userData);
+                                    if (userInfo.points) {
+                                        message = `当前积分：${userInfo.points}\n${message}`;
+                                    }
+                                } catch (e) {
+                                    console.log('解析用户信息失败:', e);
+                                }
+                            }
+                            
+                            $notification.post(
+                                `${cookieName} 🔔`,
+                                `今日已签到 ✓`,
+                                message
+                            )
+                        });
                         
                         console.log('================')
                         console.log('签到结果')
                         console.log('状态: 今日已签到')
-                        console.log('时间:', timeStr)
                         console.log('================')
                     } else {
+                        console.log('尝试解析响应数据:', data)
                         const result = JSON.parse(data)
                         console.log('解析后的响应:', JSON.stringify(result, null, 2))
                         
@@ -81,10 +102,16 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                             }
                             
                             body = result.msg || '获得积分'
-                            const pointsMatch = result.msg && result.msg.match(/\d+/)
+                            // 尝试不同的积分匹配模式
+                            const pointsMatch = result.msg && (
+                                result.msg.match(/获得\s*(\d+)\s*积分/) ||
+                                result.msg.match(/\+\s*(\d+)/) ||
+                                result.msg.match(/(\d+)\s*积分/)
+                            )
                             if (pointsMatch) {
-                                body = `获得 ${pointsMatch[0]} 积分 🎁`
+                                body = `获得 ${pointsMatch[1]} 积分 🎁`
                             }
+                            console.log('积分匹配结果:', pointsMatch)
                         } else {
                             subtitle = '签到失败 ❌'
                             body = result.msg || '未知原因'
