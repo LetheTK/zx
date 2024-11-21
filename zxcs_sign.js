@@ -55,10 +55,11 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                         const now = new Date()
                         const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
                         
-                        const subtitle = '今日已签到 ✅'
-                        const body = `签到时间: ${timeStr}`
-                        
-                        $notification.post(cookieName, subtitle, body)
+                        $notification.post(
+                            `${cookieName} 🔔`,
+                            `今日已签到 ✓`,
+                            `时间：${timeStr}`
+                        )
                         
                         console.log('================')
                         console.log('签到结果')
@@ -73,17 +74,16 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                         let body = ''
                         
                         if (result.status === 1) {
-                            subtitle = '签到成功 🎉'
-                            body = result.msg || '获得积分'
+                            if (result.msg && result.msg.includes('已签到')) {
+                                subtitle = '今日已签到 ✓'
+                            } else {
+                                subtitle = '签到成功 🎉'
+                            }
                             
-                            if (result.msg) {
-                                if (result.msg.includes('已签到')) {
-                                    subtitle = '今日已签到 ⚠️'
-                                }
-                                const pointsMatch = result.msg.match(/\d+/)
-                                if (pointsMatch) {
-                                    body = `获得${pointsMatch[0]}积分 🎁`
-                                }
+                            body = result.msg || '获得积分'
+                            const pointsMatch = result.msg && result.msg.match(/\d+/)
+                            if (pointsMatch) {
+                                body = `获得 ${pointsMatch[0]} 积分 🎁`
                             }
                         } else {
                             subtitle = '签到失败 ❌'
@@ -97,9 +97,13 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                         // 添加时间戳
                         const now = new Date()
                         const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-                        body += `\n${timeStr}`
+                        body += `\n时间：${timeStr}`
                         
-                        $notification.post(cookieName, subtitle, body)
+                        $notification.post(
+                            `${cookieName} 🔔`, 
+                            subtitle,
+                            body
+                        )
                         
                         console.log('================')
                         console.log('签到结果')
@@ -110,7 +114,11 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                     }
                 } catch (e) {
                     const errorMsg = '解析响应失败：' + e.message
-                    $notification.post(cookieName, '签到失败 ❌', errorMsg)
+                    $notification.post(
+                        `${cookieName} 🔔`,
+                        '签到失败 ❌',
+                        errorMsg
+                    )
                     console.log(errorMsg)
                     console.log('原始响应:', data)
                 }
@@ -120,7 +128,11 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
     } catch (e) {
         const errorMsg = '执行异常：' + e.message
         console.log(errorMsg)
-        $notification.post(cookieName, '签到异常 ❌', errorMsg)
+        $notification.post(
+            `${cookieName} 🔔`,
+            '签到异常 ❌',
+            errorMsg
+        )
         $done({})
     }
 })()
