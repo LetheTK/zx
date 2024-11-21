@@ -51,52 +51,63 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                 try {
                     // 检查响应是否为空
                     if (!data || data === '{}') {
-                        throw new Error('服务器返回空响应，可能需要重新登录')
-                    }
-
-                    const result = JSON.parse(data)
-                    console.log('解析后的响应:', JSON.stringify(result, null, 2))
-                    
-                    let subtitle = ''
-                    let body = ''
-                    
-                    if (result.status === 1) {
-                        subtitle = '签到成功 🎉'
-                        body = result.msg || '获得积分'
+                        // 空响应通常意味着已经签到
+                        const now = new Date()
+                        const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
                         
-                        if (result.msg) {
-                            if (result.msg.includes('已签到')) {
-                                subtitle = '今日已签到 ⚠️'
-                            }
-                            const pointsMatch = result.msg.match(/\d+/)
-                            if (pointsMatch) {
-                                body = `获得${pointsMatch[0]}积分 🎁`
-                            }
-                        }
+                        const subtitle = '今日已签到 ✅'
+                        const body = `签到时间: ${timeStr}`
+                        
+                        $notification.post(cookieName, subtitle, body)
+                        
+                        console.log('================')
+                        console.log('签到结果')
+                        console.log('状态: 今日已签到')
+                        console.log('时间:', timeStr)
+                        console.log('================')
                     } else {
-                        subtitle = '签到失败 ❌'
-                        body = result.msg || '未知原因'
+                        const result = JSON.parse(data)
+                        console.log('解析后的响应:', JSON.stringify(result, null, 2))
                         
-                        if (result.msg && result.msg.includes('登录')) {
-                            body += '\nCookie可能已失效，请重新获取'
+                        let subtitle = ''
+                        let body = ''
+                        
+                        if (result.status === 1) {
+                            subtitle = '签到成功 🎉'
+                            body = result.msg || '获得积分'
+                            
+                            if (result.msg) {
+                                if (result.msg.includes('已签到')) {
+                                    subtitle = '今日已签到 ⚠️'
+                                }
+                                const pointsMatch = result.msg.match(/\d+/)
+                                if (pointsMatch) {
+                                    body = `获得${pointsMatch[0]}积分 🎁`
+                                }
+                            }
+                        } else {
+                            subtitle = '签到失败 ❌'
+                            body = result.msg || '未知原因'
+                            
+                            if (result.msg && result.msg.includes('登录')) {
+                                body += '\nCookie可能已失效，请重新获取'
+                            }
                         }
+                        
+                        // 添加时间戳
+                        const now = new Date()
+                        const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+                        body += `\n${timeStr}`
+                        
+                        $notification.post(cookieName, subtitle, body)
+                        
+                        console.log('================')
+                        console.log('签到结果')
+                        console.log('时间:', timeStr)
+                        console.log('状态:', subtitle)
+                        console.log('详细信息:', body)
+                        console.log('================')
                     }
-                    
-                    // 添加时间戳
-                    const now = new Date()
-                    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-                    body += `\n${timeStr}`
-                    
-                    $notification.post(cookieName, subtitle, body)
-                    
-                    // 输出详细日志
-                    console.log('================')
-                    console.log('签到结果')
-                    console.log('时间:', timeStr)
-                    console.log('状态:', subtitle)
-                    console.log('详细信息:', body)
-                    console.log('================')
-                    
                 } catch (e) {
                     const errorMsg = '解析响应失败：' + e.message
                     $notification.post(cookieName, '签到失败 ❌', errorMsg)
