@@ -55,23 +55,24 @@ const csKey = 'soul_cs'
 function checkSignStatus(token, at, cs, biParams) {
     return new Promise((resolve, reject) => {
         const bi = encodeURIComponent(JSON.stringify(biParams))
-        const url = `https://increase-openapi.soulapp.cn/increase/sign/getTodaySignStatus?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
+        const url = `https://increase-openapi.soulapp.cn/increase/sign/querySign?bi=${bi}&bik=32243&pageId=MSoulCoinNew_Mine`
         
         const headers = {
             'Host': 'increase-openapi.soulapp.cn',
             'cs': cs,
             'tk': token,
             'Accept': '*/*',
-            'clientTraceId': `b${Date.now()}QWlhOUhTT1BsY1Z1WUNwTVhMR0V3QT09`,
+            'Connection': 'keep-alive',
+            'clientTraceId': `6${Date.now()}QWlhOUhTT1BsY1Z1WUNwTVhMR0V3QT09`,
             'os': 'iOS',
             'slb': 'dE1vSGF4bzBvYWVyQkZZSzEvanZ0N3NoZmxPWEY4U1p0TW9IYXhvMG9hZUNPOXFJaWM2TEJRPT0=',
+            'srs': 'web',
             'at': at,
             'Accept-Language': 'zh-Hans-US;q=1, en-US;q=0.9, zh-Hant-US;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'User-Agent': 'Soul_New/5.11.0 (iPhone; iOS 17.6.1; Scale/3.00; CFNetwork; iPhone14,2)',
-            'di': '7273B6A5-A2D7-4B92-B4EA-E832998EE844',
+            'User-Agent': 'Soul_New/5.11.0 (iPhone; iOS 17.6.1; Scale/3.00; CFNetwork; iPhone14,2) SoulBegin-iOS-5.11.0-WIFI-SoulEnd',
             'sdi': '622bb76e20d0d34c95d0da6a0ad399ed',
-            'Connection': 'keep-alive',
+            'di': '7273B6A5-A2D7-4B92-B4EA-E832998EE844',
+            'Accept-Encoding': 'gzip, deflate, br',
             'avc': '240122101600',
             'aid': '10000001',
             'av': '5.11.0'
@@ -95,7 +96,11 @@ function checkSignStatus(token, at, cs, biParams) {
                 console.log('解析后的响应:', result)
                 
                 if (result.code === 10001) {
-                    resolve(result.data || {})
+                    resolve({
+                        todaySignStatus: result.data.todayIsSign,
+                        continuousSignDays: result.data.continuousSignDays,
+                        userSoulCoinNum: result.data.userSoulCoinNum
+                    })
                 } else {
                     console.log('获取签到状态失败:', result)
                     reject(new Error(result.message || '获取签到状态失败'))
