@@ -9,6 +9,10 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
             throw new Error('Cookie不存在，请先获取Cookie')
         }
 
+        console.log('================')
+        console.log('开始签到')
+        console.log('使用的Cookie:', cookie)
+
         const headers = {
             'Host': 'zxcsol.com',
             'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -32,16 +36,27 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
             body: body
         }
 
+        console.log('发送请求:', JSON.stringify(myRequest, null, 2))
+
         $httpClient.post(myRequest, (error, response, data) => {
+            console.log('获得响应')
+            console.log('状态码:', response ? response.status : 'unknown')
+            console.log('响应头:', response ? JSON.stringify(response.headers, null, 2) : 'unknown')
+            console.log('响应体:', data)
+
             if (error) {
                 $notification.post(cookieName, '签到失败 ❌', '请求异常：' + error)
                 console.log('签到请求失败:', error)
             } else {
                 try {
-                    console.log('签到返回数据:', data)
+                    // 检查响应是否为空
+                    if (!data || data === '{}') {
+                        throw new Error('服务器返回空响应，可能需要重新登录')
+                    }
+
                     const result = JSON.parse(data)
+                    console.log('解析后的响应:', JSON.stringify(result, null, 2))
                     
-                    // 构建详细的签到结果
                     let subtitle = ''
                     let body = ''
                     
@@ -49,12 +64,10 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                         subtitle = '签到成功 🎉'
                         body = result.msg || '获得积分'
                         
-                        // 尝试解析更多信息
                         if (result.msg) {
                             if (result.msg.includes('已签到')) {
                                 subtitle = '今日已签到 ⚠️'
                             }
-                            // 提取签到获得的积分（如果有）
                             const pointsMatch = result.msg.match(/\d+/)
                             if (pointsMatch) {
                                 body = `获得${pointsMatch[0]}积分 🎁`
@@ -64,9 +77,8 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                         subtitle = '签到失败 ❌'
                         body = result.msg || '未知原因'
                         
-                        // 检查常见错误
                         if (result.msg && result.msg.includes('登录')) {
-                            body += '\n请重新获取Cookie'
+                            body += '\nCookie可能已失效，请重新获取'
                         }
                     }
                     
@@ -79,23 +91,25 @@ const signUrl = 'https://zxcsol.com/wp-admin/admin-ajax.php'
                     
                     // 输出详细日志
                     console.log('================')
-                    console.log('签到时间:', timeStr)
-                    console.log('签到状态:', subtitle)
+                    console.log('签到结果')
+                    console.log('时间:', timeStr)
+                    console.log('状态:', subtitle)
                     console.log('详细信息:', body)
-                    console.log('原始返回:', data)
                     console.log('================')
                     
                 } catch (e) {
-                    $notification.post(cookieName, '签到失败 ❌', '解析响应失败：' + e.message)
-                    console.log('解析响应失败:', e)
+                    const errorMsg = '解析响应失败：' + e.message
+                    $notification.post(cookieName, '签到失败 ❌', errorMsg)
+                    console.log(errorMsg)
                     console.log('原始响应:', data)
                 }
             }
             $done({})
         })
     } catch (e) {
-        console.log('执行异常:', e)
-        $notification.post(cookieName, '签到异常 ❌', e.message)
+        const errorMsg = '执行异常：' + e.message
+        console.log(errorMsg)
+        $notification.post(cookieName, '签到异常 ❌', errorMsg)
         $done({})
     }
 })()
