@@ -1,0 +1,12 @@
+#!name=zhixuantxt
+#!desc=zhixuan
+
+[Script]
+
+知轩 = type=cron, cronexp="15 13 * * *", script-path=https://raw.githubusercontent.com/Sliverkiss/GoodNight/master/Script/zhixuan.js, timeout=60, wake-system=1
+
+知轩获取token_18 = type=http-request, pattern=^https:\/\/zxcstxt\.com\/user\/, script-path=https://raw.githubusercontent.com/Sliverkiss/GoodNight/master/Script/zhixuan.js, timeout=30
+
+[MITM]
+
+hostname = %APPEND% zxcstxt.com,zxcstxt.com
